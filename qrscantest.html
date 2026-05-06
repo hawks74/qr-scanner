@@ -4,559 +4,449 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>GD_MO_0900 재고실사</title>
+
+<!-- jsQR : QR 디코딩 라이브러리 -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+
 <style>
-  /* ===== RESET & BASE ===== */
-  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body {
-    width: 100%; height: 100%;
-    background: #777;
-    font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
-  }
+/* ===== RESET ===== */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;background:#777;font-family:'Malgun Gothic','맑은 고딕',sans-serif;}
 
-  /* ===== GALAXY S26 SHELL ===== */
-  .device-shell {
-    width: 454px;
-    min-height: 1000px;
-    margin: 24px auto;
-    background: #0a0a0a;
-    border-radius: 52px;
-    padding: 16px 11px;
-    box-shadow:
-      0 0 0 1px #555,
-      0 0 0 3px #1a1a1a,
-      0 0 0 5px #333,
-      0 12px 60px rgba(0,0,0,0.8);
-    position: relative;
-  }
-  /* 펀치홀 카메라 */
-  .device-shell::before {
-    content: '';
-    position: absolute;
-    top: 22px; left: 50%; transform: translateX(-50%);
-    width: 12px; height: 12px;
-    background: #1a1a1a;
-    border-radius: 50%;
-    z-index: 20;
-    box-shadow: 0 0 0 2px #2a2a2a;
-  }
-  /* 볼륨 버튼 */
-  .device-shell::after {
-    content: '';
-    position: absolute;
-    left: -4px; top: 160px;
-    width: 4px; height: 80px;
-    background: #222;
-    border-radius: 3px 0 0 3px;
-    box-shadow: 0 90px 0 #222;
-  }
+/* ===== GALAXY S26 SHELL ===== */
+.device-shell{
+  width:454px;min-height:1000px;margin:24px auto;
+  background:#0a0a0a;border-radius:52px;padding:16px 11px;
+  box-shadow:0 0 0 1px #555,0 0 0 3px #1a1a1a,0 0 0 5px #333,0 12px 60px rgba(0,0,0,.8);
+  position:relative;
+}
+/* 펀치홀 */
+.device-shell::before{
+  content:'';position:absolute;
+  top:22px;left:50%;transform:translateX(-50%);
+  width:12px;height:12px;background:#1a1a1a;border-radius:50%;
+  z-index:20;box-shadow:0 0 0 2px #2a2a2a;
+}
+/* 볼륨 버튼 */
+.device-shell::after{
+  content:'';position:absolute;
+  left:-4px;top:160px;width:4px;height:80px;
+  background:#222;border-radius:3px 0 0 3px;
+  box-shadow:0 90px 0 #222;
+}
 
-  /* ===== SCREEN ===== */
-  .screen {
-    width: 100%;
-    height: 968px;
-    background: #fff;
-    border-radius: 42px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-  }
+/* ===== SCREEN ===== */
+.screen{
+  width:100%;height:968px;background:#fff;
+  border-radius:42px;overflow:hidden;
+  display:flex;flex-direction:column;position:relative;
+}
 
-  /* ===== STATUS BAR ===== */
-  .status-bar {
-    background: #111;
-    color: #fff;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 14px 22px 8px;
-    font-size: 11px;
-    font-weight: 600;
-    flex-shrink: 0;
-    min-height: 40px;
-  }
-  .status-bar .time { font-size: 13px; font-weight: 700; }
-  .status-bar .icons { display: flex; gap: 6px; align-items: center; }
-  .signal { display: flex; gap: 2px; align-items: flex-end; height: 13px; }
-  .signal span { width: 3px; background: #fff; border-radius: 1px; }
-  .signal span:nth-child(1) { height: 4px; }
-  .signal span:nth-child(2) { height: 7px; }
-  .signal span:nth-child(3) { height: 10px; }
-  .signal span:nth-child(4) { height: 13px; }
-  .battery { display: flex; align-items: center; gap: 2px; }
-  .battery-body {
-    width: 22px; height: 11px;
-    border: 1.5px solid #fff;
-    border-radius: 2px;
-    padding: 1.5px;
-    display: flex; align-items: center;
-  }
-  .battery-fill { width: 88%; height: 100%; background: #fff; border-radius: 1px; }
-  .battery-cap { width: 2px; height: 5px; background: #fff; border-radius: 0 1px 1px 0; }
+/* ===== STATUS BAR ===== */
+.status-bar{
+  background:#111;color:#fff;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 22px 8px;font-size:11px;font-weight:600;
+  flex-shrink:0;min-height:40px;
+}
+.status-bar .time{font-size:13px;font-weight:700;}
+.status-bar .icons{display:flex;gap:6px;align-items:center;}
+.signal{display:flex;gap:2px;align-items:flex-end;height:13px;}
+.signal span{width:3px;background:#fff;border-radius:1px;}
+.signal span:nth-child(1){height:4px;}
+.signal span:nth-child(2){height:7px;}
+.signal span:nth-child(3){height:10px;}
+.signal span:nth-child(4){height:13px;}
+.battery{display:flex;align-items:center;gap:2px;}
+.battery-body{width:22px;height:11px;border:1.5px solid #fff;border-radius:2px;padding:1.5px;display:flex;align-items:center;}
+.battery-fill{width:88%;height:100%;background:#fff;border-radius:1px;}
+.battery-cap{width:2px;height:5px;background:#fff;border-radius:0 1px 1px 0;}
 
-  /* ===== HEADER ===== */
-  .header {
-    background: #111;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    padding: 0 16px;
-    height: 54px;
-    flex-shrink: 0;
-    border-bottom: 1px solid #2a2a2a;
-  }
-  .btn-back {
-    background: none; border: none; color: #fff;
-    font-size: 26px; cursor: pointer;
-    padding: 8px 14px 8px 0; line-height: 1;
-    min-width: 48px; min-height: 48px;
-    display: flex; align-items: center;
-  }
-  .header .title {
-    flex: 1; text-align: center;
-    font-size: 17px; font-weight: 700;
-    letter-spacing: -0.3px; margin-right: 48px;
-  }
+/* ===== HEADER ===== */
+.header{
+  background:#111;color:#fff;
+  display:flex;align-items:center;
+  padding:0 16px;height:54px;
+  flex-shrink:0;border-bottom:1px solid #2a2a2a;
+}
+.btn-back{
+  background:none;border:none;color:#fff;font-size:26px;cursor:pointer;
+  padding:8px 14px 8px 0;line-height:1;
+  min-width:48px;min-height:48px;display:flex;align-items:center;
+}
+.header .title{
+  flex:1;text-align:center;
+  font-size:17px;font-weight:700;letter-spacing:-.3px;margin-right:48px;
+}
 
-  /* ===== BODY ===== */
-  .body {
-    flex: 1;
-    background: #f5f5f5;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden; /* 리스트 영역만 스크롤 */
-  }
+/* ===== BODY ===== */
+.body{
+  flex:1;background:#f5f5f5;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
 
-  /* ===== SELECT AREA ===== */
-  .select-area {
-    background: #fff;
-    padding: 12px 16px;
-    border-bottom: 1px solid #ddd;
-    display: flex; align-items: center; gap: 10px;
-    flex-shrink: 0;
-  }
-  .select-area label {
-    font-size: 14px; font-weight: 700; color: #111; white-space: nowrap;
-  }
-  .select-area select {
-    flex: 1; height: 46px;
-    border: 2px solid #111; border-radius: 0;
-    background: #fff; font-size: 14px; font-weight: 600; color: #111;
-    padding: 0 32px 0 12px;
-    appearance: none; -webkit-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'%3E%3Cpath fill='%23111' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    cursor: pointer; font-family: inherit;
-  }
+/* ===== SELECT AREA ===== */
+.select-area{
+  background:#fff;padding:12px 16px;
+  border-bottom:1px solid #ddd;
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
+}
+.select-area label{font-size:14px;font-weight:700;color:#111;white-space:nowrap;}
+.select-area select{
+  flex:1;height:46px;border:2px solid #111;border-radius:0;
+  background:#fff;font-size:14px;font-weight:600;color:#111;
+  padding:0 32px 0 12px;appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'%3E%3Cpath fill='%23111' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;
+  cursor:pointer;font-family:inherit;
+}
 
-  /* ===== QR SCAN AREA ===== */
-  .qr-area {
-    background: #fff;
-    padding: 12px 16px 10px;
-    border-bottom: 1px solid #ddd;
-    flex-shrink: 0;
-  }
-  .qr-viewport {
-    width: 100%; height: 200px;
-    border: 2px solid #111;
-    background: #111;
-    display: flex; align-items: center; justify-content: center;
-    position: relative; overflow: hidden;
-    cursor: pointer;
-    user-select: none;
-  }
-  .qr-viewport video {
-    width: 100%; height: 100%;
-    object-fit: cover;
-    display: none;
-    position: absolute; top: 0; left: 0;
-  }
-  .qr-viewport video.active { display: block; }
+/* ===== QR SCAN AREA ===== */
+.qr-area{
+  background:#fff;padding:12px 16px 10px;
+  border-bottom:1px solid #ddd;flex-shrink:0;
+}
 
-  /* 스캔 라인 */
-  .qr-scan-line {
-    position: absolute;
-    width: 100%; height: 2px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent);
-    top: 5%; display: none; z-index: 5;
-    animation: scanMove 1.8s ease-in-out infinite;
-  }
-  .qr-scan-line.active { display: block; }
-  @keyframes scanMove {
-    0%   { top: 5%; }
-    50%  { top: 92%; }
-    100% { top: 5%; }
-  }
+/* 뷰포트 */
+.qr-viewport{
+  width:100%;height:200px;
+  border:2px solid #111;background:#111;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+  cursor:pointer;user-select:none;
+}
 
-  /* 코너 브라켓 */
-  .qr-corners { position: absolute; inset: 12px; pointer-events: none; z-index: 6; }
-  .qr-corners::before, .qr-corners::after,
-  .qr-corners span::before, .qr-corners span::after {
-    content: ''; position: absolute;
-    width: 20px; height: 20px;
-    border-color: #fff; border-style: solid;
-  }
-  .qr-corners::before  { top: 0; left: 0;  border-width: 3px 0 0 3px; }
-  .qr-corners::after   { top: 0; right: 0; border-width: 3px 3px 0 0; }
-  .qr-corners span::before { bottom: 0; left: 0;  border-width: 0 0 3px 3px; }
-  .qr-corners span::after  { bottom: 0; right: 0; border-width: 0 3px 3px 0; }
+/* 실제 카메라 영상 */
+#qrVideo{
+  position:absolute;top:0;left:0;
+  width:100%;height:100%;
+  object-fit:cover;display:none;
+}
+#qrVideo.active{display:block;}
 
-  /* 플레이스홀더 */
-  .qr-placeholder {
-    display: flex; flex-direction: column;
-    align-items: center; gap: 10px; z-index: 4; pointer-events: none;
-  }
-  .qr-symbol-inner {
-    width: 64px; height: 64px;
-    border: 3px solid #555;
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows: 1fr 1fr 1fr;
-    gap: 3px; padding: 6px;
-  }
-  .qr-symbol-inner span { background: #555; display: block; }
-  .qr-symbol-inner span.empty { background: transparent; }
-  .qr-placeholder p { font-size: 12px; color: #888; }
+/* QR 디코딩용 숨긴 캔버스 */
+#qrCanvas{display:none;}
 
-  /* 스캔 중 하단 안내 텍스트 */
-  .scan-status-text {
-    position: absolute; bottom: 10px;
-    left: 0; right: 0; text-align: center;
-    font-size: 12px; color: rgba(255,255,255,0.8);
-    font-weight: 600; z-index: 7; display: none; letter-spacing: 0.3px;
-  }
-  .scan-status-text.active { display: block; }
+/* 스캔 라인 */
+.scan-line{
+  position:absolute;width:100%;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.9),transparent);
+  top:5%;display:none;z-index:5;
+  animation:scanMove 1.8s ease-in-out infinite;
+}
+.scan-line.active{display:block;}
+@keyframes scanMove{0%{top:5%;}50%{top:92%;}100%{top:5%;}}
 
-  /* 카메라 에러 안내 */
-  .qr-error {
-    display: none; flex-direction: column;
-    align-items: center; gap: 8px;
-    z-index: 4; pointer-events: none;
-    padding: 0 20px; text-align: center;
-  }
-  .qr-error.show { display: flex; }
-  .qr-error p { font-size: 12px; color: #bbb; line-height: 1.7; }
-  .qr-error strong { font-size: 13px; color: #888; }
+/* 코너 브라켓 */
+.qr-corners{position:absolute;inset:12px;pointer-events:none;z-index:6;}
+.qr-corners::before,.qr-corners::after,
+.qr-corners span::before,.qr-corners span::after{
+  content:'';position:absolute;width:20px;height:20px;
+  border-color:#fff;border-style:solid;
+}
+.qr-corners::before {top:0;left:0;border-width:3px 0 0 3px;}
+.qr-corners::after  {top:0;right:0;border-width:3px 3px 0 0;}
+.qr-corners span::before{bottom:0;left:0;border-width:0 0 3px 3px;}
+.qr-corners span::after {bottom:0;right:0;border-width:0 3px 3px 0;}
 
-  /* ===== 시뮬 버튼 (카메라 없는 환경 전용) ===== */
-  .sim-btn-wrap {
-    display: none;
-    padding: 8px 16px 10px;
-    background: #fff;
-    border-bottom: 1px solid #ddd;
-    flex-shrink: 0;
-  }
-  .sim-btn-wrap.show { display: block; }
-  .btn-sim {
-    width: 100%; height: 48px;
-    background: #fff; color: #111;
-    border: 2px dashed #555; border-radius: 0;
-    font-size: 13px; font-weight: 700;
-    cursor: pointer; letter-spacing: 0.3px;
-    font-family: inherit;
-  }
-  .btn-sim:active { background: #f0f0f0; }
-  .btn-sim:disabled { color: #bbb; border-color: #ddd; cursor: default; }
+/* 상태 레이어 (대기/스캔중/에러) */
+.qr-state{
+  position:absolute;inset:0;z-index:4;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;
+  pointer-events:none;
+}
+/* 대기 상태 심볼 */
+.qr-symbol{
+  width:64px;height:64px;
+  border:3px solid #555;
+  display:grid;grid-template-columns:1fr 1fr 1fr;
+  grid-template-rows:1fr 1fr 1fr;
+  gap:3px;padding:6px;
+}
+.qr-symbol span{background:#555;display:block;}
+.qr-symbol span.e{background:transparent;}
+.qr-state p{font-size:12px;color:#888;letter-spacing:.2px;}
 
-  /* ===== SEARCH AREA ===== */
-  .search-area {
-    display: flex; align-items: center; gap: 8px;
-    padding: 10px 16px;
-    background: #fff; border-bottom: 2px solid #111;
-    flex-shrink: 0;
-  }
-  .search-area input[type="tel"] {
-    flex: 1; height: 50px;
-    border: 2px solid #111; border-radius: 0;
-    font-size: 15px; padding: 0 14px;
-    color: #111; background: #fff; outline: none;
-    font-family: inherit;
-  }
-  .search-area input[type="tel"]::placeholder { color: #bbb; font-size: 13px; }
-  .search-area input[type="tel"]:focus { background: #f8f8f8; }
-  .btn-search {
-    height: 50px; padding: 0 18px;
-    background: #111; color: #fff;
-    border: none; border-radius: 0;
-    font-size: 14px; font-weight: 700;
-    cursor: pointer; white-space: nowrap;
-    min-width: 64px; font-family: inherit;
-  }
-  .btn-search:disabled { background: #aaa; cursor: default; }
+/* 스캔 중 하단 안내 */
+.scan-tip{
+  position:absolute;bottom:8px;left:0;right:0;
+  text-align:center;font-size:11px;
+  color:rgba(255,255,255,.8);font-weight:600;
+  z-index:7;display:none;letter-spacing:.3px;
+}
+.scan-tip.active{display:block;}
 
-  /* ===== SCAN STATS ===== */
-  .scan-stats {
-    padding: 10px 16px;
-    background: #fff; border-bottom: 1px solid #ddd;
-    display: none; flex-shrink: 0;
-    align-items: center; justify-content: space-between;
-  }
-  .scan-stats.visible { display: flex; }
-  .scan-stats-text { font-size: 14px; font-weight: 700; color: #111; }
-  .scan-stats-text .count { font-size: 17px; font-weight: 900; }
-  .scan-stats-text .total { font-size: 17px; font-weight: 900; color: #555; }
-  .progress-bar-wrap {
-    width: 110px; height: 5px;
-    background: #e0e0e0; border-radius: 0; overflow: hidden;
-  }
-  .progress-bar-fill {
-    height: 100%; background: #111; width: 0%;
-    transition: width 0.3s ease;
-  }
+/* 에러 안내 */
+.qr-err{
+  display:flex;flex-direction:column;
+  align-items:center;gap:6px;padding:0 20px;text-align:center;
+}
+.qr-err strong{font-size:13px;color:#bbb;}
+.qr-err p{font-size:11px;color:#888;line-height:1.6;}
 
-  /* ===== EMPTY STATE ===== */
-  .empty-state {
-    flex: 1; display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    padding: 30px 20px; gap: 8px;
-  }
-  .empty-state p { text-align: center; font-size: 14px; color: #888; line-height: 1.7; }
-  .empty-hint { font-size: 12px; color: #bbb; text-align: center; }
+/* ===== SEARCH AREA ===== */
+.search-area{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 16px;background:#fff;
+  border-bottom:2px solid #111;flex-shrink:0;
+}
+.search-area input{
+  flex:1;height:50px;border:2px solid #111;border-radius:0;
+  font-size:15px;padding:0 14px;color:#111;background:#fff;
+  outline:none;font-family:inherit;
+}
+.search-area input::placeholder{color:#bbb;font-size:13px;}
+.search-area input:focus{background:#f8f8f8;}
+.btn-search{
+  height:50px;padding:0 18px;background:#111;color:#fff;
+  border:none;border-radius:0;font-size:14px;font-weight:700;
+  cursor:pointer;white-space:nowrap;min-width:64px;font-family:inherit;
+}
+.btn-search:disabled{background:#aaa;cursor:default;}
 
-  /* ===== VEHICLE LIST ===== */
-  .vehicle-list-wrap {
-    flex: 1; overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    display: none; flex-direction: column;
-    background: #f5f5f5;
-  }
-  .vehicle-list-wrap.visible { display: flex; }
-  .vehicle-list-wrap::-webkit-scrollbar { width: 3px; }
-  .vehicle-list-wrap::-webkit-scrollbar-track { background: #f0f0f0; }
-  .vehicle-list-wrap::-webkit-scrollbar-thumb { background: #ccc; }
+/* ===== SCAN STATS ===== */
+.scan-stats{
+  padding:10px 16px;background:#fff;
+  border-bottom:1px solid #ddd;
+  display:none;flex-shrink:0;
+  align-items:center;justify-content:space-between;
+}
+.scan-stats.visible{display:flex;}
+.stats-text{font-size:14px;font-weight:700;color:#111;}
+.stats-text .cnt{font-size:17px;font-weight:900;}
+.stats-text .tot{font-size:17px;font-weight:900;color:#555;}
+.prog-wrap{width:110px;height:5px;background:#e0e0e0;overflow:hidden;}
+.prog-fill{height:100%;background:#111;width:0%;transition:width .3s;}
 
-  .list-section-header {
-    padding: 8px 16px;
-    background: #eee; border-bottom: 1px solid #ddd;
-    font-size: 11px; font-weight: 700; color: #555;
-    letter-spacing: 0.5px;
-    flex-shrink: 0;
-    display: flex; justify-content: space-between; align-items: center;
-    position: sticky; top: 0; z-index: 10;
-  }
+/* ===== EMPTY STATE ===== */
+.empty-state{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:30px 20px;gap:8px;
+}
+.empty-state p{text-align:center;font-size:14px;color:#888;line-height:1.7;}
+.empty-hint{font-size:12px;color:#bbb;text-align:center;}
 
-  /* 차량 카드 */
-  .vehicle-card {
-    background: #fff;
-    border-bottom: 1px solid #e8e8e8;
-    padding: 13px 16px;
-    display: flex; gap: 12px; align-items: flex-start;
-  }
-  @keyframes slideInCard {
-    from { opacity: 0; transform: translateY(-6px); background: #e8e8e8; }
-    to   { opacity: 1; transform: translateY(0);    background: #fff; }
-  }
-  .vehicle-card.new-scan { animation: slideInCard 0.35s ease forwards; }
-  @keyframes flashHL {
-    0%,100% { background: #fff; }
-    35%     { background: #e0e0e0; }
-  }
-  .vehicle-card.highlight { animation: flashHL 0.7s ease; }
+/* ===== VEHICLE LIST ===== */
+.list-wrap{
+  flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  display:none;flex-direction:column;background:#f5f5f5;
+}
+.list-wrap.visible{display:flex;}
+.list-wrap::-webkit-scrollbar{width:3px;}
+.list-wrap::-webkit-scrollbar-track{background:#f0f0f0;}
+.list-wrap::-webkit-scrollbar-thumb{background:#ccc;}
 
-  .badge-col { flex-shrink: 0; padding-top: 2px; }
-  .badge {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 52px; height: 24px;
-    font-size: 11px; font-weight: 800;
-    border-radius: 0; letter-spacing: 0.8px;
-    border: 2px solid #111;
-  }
-  .badge-scanned   { background: #111; color: #fff; border-color: #111; }
-  .badge-unscanned { background: #fff; color: #bbb; border: 2px dashed #ccc; font-size: 10px; letter-spacing: 3px; }
+.list-header{
+  padding:8px 16px;background:#eee;
+  border-bottom:1px solid #ddd;
+  font-size:11px;font-weight:700;color:#555;
+  letter-spacing:.5px;flex-shrink:0;
+  display:flex;justify-content:space-between;align-items:center;
+  position:sticky;top:0;z-index:10;
+}
 
-  .vehicle-info { flex: 1; min-width: 0; }
-  .vin  { font-size: 11px; font-weight: 600; color: #888; font-family: 'Courier New', monospace; letter-spacing: 0.8px; margin-bottom: 2px; }
-  .plate { font-size: 15px; font-weight: 800; color: #111; margin-bottom: 3px; }
-  .model-color { font-size: 12px; color: #333; margin-bottom: 1px; }
-  .interior    { font-size: 12px; color: #666; margin-bottom: 5px; }
-  .loc-badge {
-    display: inline-block;
-    background: #f0f0f0; border: 1px solid #ccc;
-    font-size: 11px; color: #444; padding: 2px 8px; font-weight: 700;
-  }
+/* 차량 카드 */
+.v-card{
+  background:#fff;border-bottom:1px solid #e8e8e8;
+  padding:13px 16px;display:flex;gap:12px;align-items:flex-start;
+}
+@keyframes slideIn{
+  from{opacity:0;transform:translateY(-8px);background:#e0e0e0;}
+  to  {opacity:1;transform:translateY(0);   background:#fff;}
+}
+.v-card.new{animation:slideIn .35s ease forwards;}
+@keyframes flash{0%,100%{background:#fff;}35%{background:#e0e0e0;}}
+.v-card.dup{animation:flash .7s ease;}
 
-  /* ===== FOOTER ===== */
-  .footer {
-    background: #fff; border-top: 2px solid #111;
-    padding: 12px 16px 14px; flex-shrink: 0;
-  }
-  .btn-complete {
-    width: 100%; height: 58px;
-    background: #111; color: #fff;
-    border: none; border-radius: 0;
-    font-size: 16px; font-weight: 800;
-    cursor: pointer; letter-spacing: 1px; font-family: inherit;
-  }
-  .btn-complete:active { background: #333; }
+.badge-col{flex-shrink:0;padding-top:2px;}
+.badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:52px;height:24px;font-size:11px;font-weight:800;
+  border-radius:0;letter-spacing:.8px;border:2px solid #111;
+}
+.b-ok {background:#111;color:#fff;border-color:#111;}
+.b-no {background:#fff;color:#bbb;border:2px dashed #ccc;font-size:10px;letter-spacing:3px;}
 
-  /* ===== DIALOG ===== */
-  .dialog-overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.6);
-    z-index: 2000; display: none;
-    align-items: center; justify-content: center;
-  }
-  .dialog-overlay.show { display: flex; }
-  .dialog-box { background: #fff; width: 310px; border: 2px solid #111; }
-  .dialog-msg {
-    padding: 26px 20px 22px;
-    font-size: 15px; color: #111;
-    text-align: center; line-height: 1.65;
-    font-weight: 500; word-break: keep-all;
-  }
-  .dialog-actions { display: flex; border-top: 1px solid #e0e0e0; }
-  .dialog-actions button {
-    flex: 1; height: 54px;
-    border: none; border-radius: 0;
-    font-size: 15px; font-weight: 700;
-    cursor: pointer; background: #fff; color: #111; font-family: inherit;
-  }
-  .dialog-actions button + button { border-left: 1px solid #e0e0e0; }
-  .dialog-actions button.primary  { background: #111; color: #fff; }
+.v-info{flex:1;min-width:0;}
+.v-vin  {font-size:11px;font-weight:600;color:#888;font-family:'Courier New',monospace;letter-spacing:.8px;margin-bottom:2px;}
+.v-plate{font-size:15px;font-weight:800;color:#111;margin-bottom:3px;}
+.v-model{font-size:12px;color:#333;margin-bottom:1px;}
+.v-int  {font-size:12px;color:#666;margin-bottom:5px;}
+.v-loc  {display:inline-block;background:#f0f0f0;border:1px solid #ccc;font-size:11px;color:#444;padding:2px 8px;font-weight:700;}
 
-  /* ===== TOAST ===== */
-  .toast {
-    position: fixed; bottom: 90px; left: 50%;
-    transform: translateX(-50%) translateY(10px);
-    background: #222; color: #fff;
-    padding: 11px 20px; font-size: 13px; font-weight: 600;
-    border-radius: 0; opacity: 0; pointer-events: none;
-    transition: opacity 0.2s, transform 0.2s;
-    z-index: 9999; max-width: 340px;
-    text-align: center; word-break: keep-all; line-height: 1.5;
-  }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+/* ===== FOOTER ===== */
+.footer{
+  background:#fff;border-top:2px solid #111;
+  padding:12px 16px 14px;flex-shrink:0;
+}
+.btn-complete{
+  width:100%;height:58px;background:#111;color:#fff;
+  border:none;border-radius:0;font-size:16px;font-weight:800;
+  cursor:pointer;letter-spacing:1px;font-family:inherit;
+}
+.btn-complete:active{background:#333;}
+
+/* ===== DIALOG ===== */
+.dlg-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);
+  z-index:2000;display:none;align-items:center;justify-content:center;
+}
+.dlg-overlay.show{display:flex;}
+.dlg-box{background:#fff;width:310px;border:2px solid #111;}
+.dlg-msg{padding:26px 20px 22px;font-size:15px;color:#111;text-align:center;line-height:1.65;font-weight:500;word-break:keep-all;}
+.dlg-actions{display:flex;border-top:1px solid #e0e0e0;}
+.dlg-actions button{
+  flex:1;height:54px;border:none;border-radius:0;
+  font-size:15px;font-weight:700;cursor:pointer;
+  background:#fff;color:#111;font-family:inherit;
+}
+.dlg-actions button+button{border-left:1px solid #e0e0e0;}
+.dlg-actions button.primary{background:#111;color:#fff;}
+
+/* ===== TOAST ===== */
+.toast{
+  position:fixed;bottom:90px;left:50%;
+  transform:translateX(-50%) translateY(10px);
+  background:#222;color:#fff;
+  padding:11px 20px;font-size:13px;font-weight:600;
+  border-radius:0;opacity:0;pointer-events:none;
+  transition:opacity .2s,transform .2s;
+  z-index:9999;max-width:340px;
+  text-align:center;word-break:keep-all;line-height:1.5;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 </style>
 </head>
 <body>
 
+<!-- ===== GALAXY S26 SHELL ===== -->
 <div class="device-shell">
-  <div class="screen">
+<div class="screen">
 
-    <!-- STATUS BAR -->
-    <div class="status-bar">
-      <span class="time" id="statusTime">09:41</span>
-      <div class="icons">
-        <div class="signal">
-          <span></span><span></span><span></span><span></span>
-        </div>
-        <span style="font-size:11px;letter-spacing:0.5px;">5G</span>
-        <div class="battery">
-          <div class="battery-body"><div class="battery-fill"></div></div>
-          <div class="battery-cap"></div>
-        </div>
-        <span style="font-size:10px;">88%</span>
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <span class="time" id="sTime">09:41</span>
+    <div class="icons">
+      <div class="signal"><span></span><span></span><span></span><span></span></div>
+      <span style="font-size:11px;letter-spacing:.5px;">5G</span>
+      <div class="battery">
+        <div class="battery-body"><div class="battery-fill"></div></div>
+        <div class="battery-cap"></div>
       </div>
+      <span style="font-size:10px;">88%</span>
     </div>
-
-    <!-- HEADER -->
-    <div class="header">
-      <button class="btn-back" onclick="goBack()">&#8249;</button>
-      <div class="title">재고실사</div>
-    </div>
-
-    <!-- BODY -->
-    <div class="body">
-
-      <!-- 실사번호 선택 -->
-      <div class="select-area">
-        <label>실사번호:</label>
-        <select id="invSelect" onchange="onSelectChange()">
-          <option value="INV-2026-05-001">INV-2026-05-001</option>
-          <option value="INV-2026-04-001">INV-2026-04-001</option>
-          <option value="INV-2026-03-001">INV-2026-03-001</option>
-        </select>
-      </div>
-
-      <!-- QR 뷰포트 -->
-      <div class="qr-area">
-        <div class="qr-viewport" id="qrViewport">
-          <video id="qrVideo" playsinline autoplay muted></video>
-          <div class="qr-scan-line" id="scanLine"></div>
-          <div class="qr-corners"><span></span></div>
-
-          <!-- 기본 플레이스홀더 -->
-          <div class="qr-placeholder" id="qrPlaceholder">
-            <div class="qr-symbol-inner">
-              <span></span><span></span><span></span>
-              <span></span><span class="empty"></span><span></span>
-              <span></span><span></span><span></span>
-            </div>
-            <p>터치하여 QR 스캔 시작</p>
-          </div>
-
-          <!-- 카메라 에러 안내 -->
-          <div class="qr-error" id="qrError">
-            <strong>카메라를 사용할 수 없습니다</strong>
-            <p>브라우저 카메라 권한을 확인하거나<br>아래 [스캔 시뮬레이션] 버튼을 사용하세요.</p>
-          </div>
-
-          <!-- 스캔 중 상태 텍스트 -->
-          <div class="scan-status-text" id="scanStatusText">● 스캔 대기 중  |  터치하면 중지</div>
-        </div>
-      </div>
-
-      <!-- 시뮬 버튼 (카메라 없는 환경 전용, 초기 숨김) -->
-      <div class="sim-btn-wrap" id="simBtnWrap">
-        <button class="btn-sim" id="btnSim" onclick="doSimScan()">
-          QR 스캔 시뮬레이션 (1회 실행)
-        </button>
-      </div>
-
-      <!-- 검색 영역 -->
-      <div class="search-area">
-        <input type="tel"
-          id="searchInput" maxlength="4"
-          placeholder="차량번호 4자리 입력"
-          inputmode="numeric"
-          oninput="onSearchInput()"
-          onkeydown="onSearchKeydown(event)">
-        <button class="btn-search" id="btnSearch" onclick="doSearch()" disabled>검색</button>
-      </div>
-
-      <!-- 스캔 통계 -->
-      <div class="scan-stats" id="scanStats">
-        <div class="scan-stats-text">
-          스캔 <span class="count" id="scanCount">0</span>건
-          &nbsp;/&nbsp;
-          목표 <span class="total">1,000</span>건
-        </div>
-        <div class="progress-bar-wrap">
-          <div class="progress-bar-fill" id="progressFill"></div>
-        </div>
-      </div>
-
-      <!-- 빈 상태 (초기) -->
-      <div class="empty-state" id="emptyState">
-        <p>QR스캔 또는 차량번호 검색을<br>진행해 주세요.</p>
-        <span class="empty-hint">위 QR 영역을 터치하면 카메라가 실행됩니다</span>
-      </div>
-
-      <!-- 차량 목록 -->
-      <div class="vehicle-list-wrap" id="vehicleListWrap">
-        <div class="list-section-header">
-          <span>스캔 결과 목록</span>
-          <span id="listCountLabel" style="font-weight:400;color:#888;"></span>
-        </div>
-        <div id="vehicleList"></div>
-      </div>
-
-    </div><!-- /body -->
-
-    <!-- FOOTER -->
-    <div class="footer">
-      <button class="btn-complete" onclick="showCompleteConfirm()">재고실사 처리</button>
-    </div>
-
   </div>
-</div>
+
+  <!-- HEADER -->
+  <div class="header">
+    <button class="btn-back" onclick="goBack()">&#8249;</button>
+    <div class="title">재고실사</div>
+  </div>
+
+  <!-- BODY -->
+  <div class="body">
+
+    <!-- 실사번호 -->
+    <div class="select-area">
+      <label>실사번호:</label>
+      <select id="invSelect" onchange="onSelectChange()">
+        <option value="INV-2026-05-001">INV-2026-05-001</option>
+        <option value="INV-2026-04-001">INV-2026-04-001</option>
+        <option value="INV-2026-03-001">INV-2026-03-001</option>
+      </select>
+    </div>
+
+    <!-- QR 뷰포트 -->
+    <div class="qr-area">
+      <div class="qr-viewport" id="qrViewport">
+
+        <!-- 실제 카메라 영상 -->
+        <video id="qrVideo" playsinline autoplay muted></video>
+
+        <!-- jsQR 디코딩용 캔버스 (숨김) -->
+        <canvas id="qrCanvas"></canvas>
+
+        <!-- 스캔 라인 (카메라 켜졌을 때) -->
+        <div class="scan-line" id="scanLine"></div>
+
+        <!-- 코너 브라켓 -->
+        <div class="qr-corners"><span></span></div>
+
+        <!-- 상태 레이어 : 초기 대기 -->
+        <div class="qr-state" id="stateIdle">
+          <div class="qr-symbol">
+            <span></span><span></span><span></span>
+            <span></span><span class="e"></span><span></span>
+            <span></span><span></span><span></span>
+          </div>
+          <p>터치하여 QR 스캔 시작</p>
+        </div>
+
+        <!-- 상태 레이어 : 카메라 에러 -->
+        <div class="qr-state" id="stateErr" style="display:none;">
+          <div class="qr-err">
+            <strong>카메라를 사용할 수 없습니다</strong>
+            <p>브라우저 카메라 권한을<br>확인해 주세요.</p>
+          </div>
+        </div>
+
+        <!-- 스캔 중 하단 안내 -->
+        <div class="scan-tip" id="scanTip">● 스캔 중  |  터치하면 종료</div>
+
+      </div>
+    </div>
+
+    <!-- 검색 -->
+    <div class="search-area">
+      <input type="tel" id="searchInput" maxlength="4"
+        placeholder="차량번호 4자리 입력" inputmode="numeric"
+        oninput="onSearchInput()" onkeydown="onSearchKey(event)">
+      <button class="btn-search" id="btnSearch" onclick="doSearch()" disabled>검색</button>
+    </div>
+
+    <!-- 스캔 통계 -->
+    <div class="scan-stats" id="scanStats">
+      <div class="stats-text">
+        스캔 <span class="cnt" id="scanCnt">0</span>건
+        &nbsp;/&nbsp;
+        목표 <span class="tot">1,000</span>건
+      </div>
+      <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+    </div>
+
+    <!-- 빈 상태 -->
+    <div class="empty-state" id="emptyState">
+      <p>QR스캔 또는 차량번호 검색을<br>진행해 주세요.</p>
+      <span class="empty-hint">위 QR 영역을 터치하면 카메라가 실행됩니다</span>
+    </div>
+
+    <!-- 차량 목록 -->
+    <div class="list-wrap" id="listWrap">
+      <div class="list-header">
+        <span>스캔 결과 목록</span>
+        <span id="listCntLabel" style="font-weight:400;color:#888;"></span>
+      </div>
+      <div id="vehicleList"></div>
+    </div>
+
+  </div><!-- /body -->
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <button class="btn-complete" onclick="showCompleteConfirm()">재고실사 처리</button>
+  </div>
+
+</div><!-- /screen -->
+</div><!-- /shell -->
 
 <!-- DIALOG -->
-<div class="dialog-overlay" id="dialogOverlay">
-  <div class="dialog-box">
-    <div class="dialog-msg" id="dialogMsg"></div>
-    <div class="dialog-actions" id="dialogActions"></div>
+<div class="dlg-overlay" id="dlgOverlay">
+  <div class="dlg-box">
+    <div class="dlg-msg" id="dlgMsg"></div>
+    <div class="dlg-actions" id="dlgActions"></div>
   </div>
 </div>
 
@@ -567,49 +457,262 @@
 /* ============================================================
    STATE
    ============================================================ */
-let scannedCount   = 0;
-const TARGET       = 1000;
-let scanningActive = false;   // ✅ 초기값 반드시 false
-let videoStream    = null;
-let simTimer       = null;
-let cameraAvailable = false;  // ✅ 카메라 사용 가능 여부
+const TARGET      = 1000;
+let scannedCount  = 0;
+let isScanning    = false;   // 카메라 ON/OFF 상태
+let videoStream   = null;
+let rafId         = null;    // requestAnimationFrame ID
+let hasResult     = false;   // 스캔/검색 결과 있는지
+let lastQrData    = '';      // 직전 QR 값 (연속 중복 방지)
+let lastQrTime    = 0;       // 직전 QR 인식 시각
 
-/* 전체 차량 목록 */
-const initialVehicles = [
-  { vin:'KMHEC4A46GU123456', plate:'경기01소2247', model:'소나타',    extColor:'메탈실버',     intColor:'베이지', loc:'CC01 판매탁송대기', scanned:false },
-  { vin:'KMHEC4A46GU234567', plate:'서울12가2246', model:'아반떼',    extColor:'퍼얼화이트',    intColor:'블랙',   loc:'CC01 판매탁송대기', scanned:false },
-  { vin:'KMHEC4A46GU345678', plate:'인천17가2245', model:'K5',        extColor:'메탈블랙',     intColor:'그레이', loc:'P101 치장대기',    scanned:false },
-  { vin:'KMHEC4A46GU456789', plate:'대전22나2244', model:'쏘나타',    extColor:'화이트',       intColor:'베이지', loc:'P101 치장대기',    scanned:false },
-  { vin:'KMHEC4A46GU567890', plate:'부산14다2243', model:'그랜저',    extColor:'문라이트블루',  intColor:'블랙',   loc:'A201 입고대기',    scanned:false },
-  { vin:'KMHEC4A46GU678901', plate:'대구25라2242', model:'투싼',      extColor:'크리스탈실버',  intColor:'베이지', loc:'B102 재고중',      scanned:false },
-  { vin:'KMHEC4A46GU789012', plate:'광주33마2241', model:'싼타페',    extColor:'딥포레스트그린', intColor:'베이지', loc:'C303 치장완료',    scanned:false },
-  { vin:'KMHEC4A46GU890123', plate:'울산44바2240', model:'팰리세이드', extColor:'문루프블랙',   intColor:'그레이', loc:'D404 출고대기',    scanned:false },
-];
+/* 차량 DB (실제 환경에서는 API 조회) */
+const vehicleDB = {
+  'QR-KMHEC4A46GU123456': {vin:'KMHEC4A46GU123456',plate:'경기01소2247',model:'소나타',   extColor:'메탈실버',    intColor:'베이지',loc:'CC01 판매탁송대기'},
+  'QR-KMHEC4A46GU234567': {vin:'KMHEC4A46GU234567',plate:'서울12가2246',model:'아반떼',   extColor:'퍼얼화이트',   intColor:'블랙',  loc:'CC01 판매탁송대기'},
+  'QR-KMHEC4A46GU345678': {vin:'KMHEC4A46GU345678',plate:'인천17가2245',model:'K5',       extColor:'메탈블랙',    intColor:'그레이',loc:'P101 치장대기'   },
+  'QR-KMHEC4A46GU456789': {vin:'KMHEC4A46GU456789',plate:'대전22나2244',model:'쏘나타',   extColor:'화이트',      intColor:'베이지',loc:'P101 치장대기'   },
+  'QR-KMHEC4A46GU567890': {vin:'KMHEC4A46GU567890',plate:'부산14다2243',model:'그랜저',   extColor:'문라이트블루', intColor:'블랙',  loc:'A201 입고대기'   },
+  'QR-KMHEC4A46GU678901': {vin:'KMHEC4A46GU678901',plate:'대구25라2242',model:'투싼',     extColor:'크리스탈실버', intColor:'베이지',loc:'B102 재고중'      },
+  'QR-KMHEC4A46GU789012': {vin:'KMHEC4A46GU789012',plate:'광주33마2241',model:'싼타페',   extColor:'딥포레스트그린',intColor:'베이지',loc:'C303 치장완료'   },
+  'QR-KMHEC4A46GU890123': {vin:'KMHEC4A46GU890123',plate:'울산44바2240',model:'팰리세이드',extColor:'문루프블랙',  intColor:'그레이',loc:'D404 출고대기'   },
+};
 
-let vehicleData = JSON.parse(JSON.stringify(initialVehicles));
-let hasScanned  = false;
+/* 스캔된 차량 목록 (최신 스캔 순, index 0이 최신) */
+let scannedList = [];
+
+/* 차량번호로 검색 가능한 목록 */
+const plateList = Object.values(vehicleDB);
 
 /* ============================================================
    STATUS BAR CLOCK
    ============================================================ */
-function updateClock() {
+(function clock(){
+  const el = document.getElementById('sTime');
   const now = new Date();
-  const h = String(now.getHours()).padStart(2,'0');
-  const m = String(now.getMinutes()).padStart(2,'0');
-  document.getElementById('statusTime').textContent = `${h}:${m}`;
-}
-updateClock();
-setInterval(updateClock, 15000);
+  el.textContent = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  setTimeout(clock, 15000);
+})();
 
 /* ============================================================
-   SEARCH
+   DOM REFS
+   ============================================================ */
+const qrViewport = document.getElementById('qrViewport');
+const qrVideo    = document.getElementById('qrVideo');
+const qrCanvas   = document.getElementById('qrCanvas');
+const scanLine   = document.getElementById('scanLine');
+const scanTip    = document.getElementById('scanTip');
+const stateIdle  = document.getElementById('stateIdle');
+const stateErr   = document.getElementById('stateErr');
+
+/* ============================================================
+   QR VIEWPORT TOUCH → 카메라 ON/OFF 토글
+   ============================================================ */
+qrViewport.addEventListener('click', () => {
+  isScanning ? stopCamera() : startCamera();
+});
+
+/* ============================================================
+   START CAMERA
+   - 카메라 켜기 → 프레임 루프 시작 → jsQR 디코딩
+   ============================================================ */
+async function startCamera() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: {ideal:1920}, height: {ideal:1080} }
+    });
+
+    videoStream    = stream;
+    qrVideo.srcObject = stream;
+    await qrVideo.play();
+    qrVideo.classList.add('active');
+
+    /* UI : 스캔 중 상태 */
+    stateIdle.style.display = 'none';
+    stateErr.style.display  = 'none';
+    scanLine.classList.add('active');
+    scanTip.classList.add('active');
+    isScanning = true;
+
+    /* 프레임 루프 시작 */
+    scanLoop();
+
+  } catch (err) {
+    console.warn('[Camera]', err.name, err.message);
+    /* 에러 안내만 표시, 자동 실행 없음 */
+    stateIdle.style.display = 'none';
+    stateErr.style.display  = 'flex';
+    isScanning = false;
+  }
+}
+
+/* ============================================================
+   STOP CAMERA
+   - 스트림 정지 → 루프 종료 → UI 복구
+   ============================================================ */
+function stopCamera() {
+  /* 프레임 루프 종료 */
+  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+
+  /* 스트림 트랙 정지 */
+  if (videoStream) {
+    videoStream.getTracks().forEach(t => t.stop());
+    videoStream = null;
+  }
+
+  qrVideo.srcObject = null;
+  qrVideo.classList.remove('active');
+
+  /* UI 복구 */
+  scanLine.classList.remove('active');
+  scanTip.classList.remove('active');
+  stateIdle.style.display = 'flex';
+  stateErr.style.display  = 'none';
+  isScanning  = false;
+  lastQrData  = '';
+  lastQrTime  = 0;
+}
+
+/* ============================================================
+   SCAN LOOP (requestAnimationFrame)
+   - 매 프레임 캔버스에 영상 캡처 → jsQR 디코딩
+   - QR 인식 성공 → processScan() 호출
+   - 같은 QR은 2초 이내 재인식 무시 (연속 중복 방지)
+   ============================================================ */
+function scanLoop() {
+  if (!isScanning) return;
+
+  /* 영상 준비 확인 */
+  if (qrVideo.readyState === qrVideo.HAVE_ENOUGH_DATA) {
+    const w = qrVideo.videoWidth;
+    const h = qrVideo.videoHeight;
+
+    if (w > 0 && h > 0) {
+      qrCanvas.width  = w;
+      qrCanvas.height = h;
+
+      const ctx = qrCanvas.getContext('2d');
+      ctx.drawImage(qrVideo, 0, 0, w, h);
+
+      const imageData = ctx.getImageData(0, 0, w, h);
+      const code = jsQR(imageData.data, w, h, { inversionAttempts: 'dontInvert' });
+
+      if (code) {
+        const now  = Date.now();
+        const data = code.data.trim();
+
+        /* 같은 QR 2초 쿨다운 (연속 중복 인식 방지) */
+        if (data !== lastQrData || now - lastQrTime > 2000) {
+          lastQrData = data;
+          lastQrTime = now;
+          processScan(data);   /* ← QR 데이터로 차량 조회 */
+        }
+      }
+    }
+  }
+
+  rafId = requestAnimationFrame(scanLoop);
+}
+
+/* ============================================================
+   PROCESS SCAN
+   - QR 데이터(문자열)로 vehicleDB 조회
+   - 인식 → 목록 최상단 추가 (중복이면 이동)
+   - 미등록 QR → 안내 토스트
+   ============================================================ */
+function processScan(qrData) {
+  /* vehicleDB에서 조회 */
+  const vehicle = vehicleDB[qrData];
+
+  if (!vehicle) {
+    showToast('등록되지 않은 차량 QR입니다.');
+    return;
+  }
+
+  const existIdx = scannedList.findIndex(v => v.vin === vehicle.vin);
+
+  if (existIdx !== -1) {
+    /* ── 중복 스캔: 목록 최상단으로 이동 ── */
+    scannedList.splice(existIdx, 1);
+    scannedList.unshift({ ...vehicle, isDup: true });
+    renderList('dup', vehicle.vin);
+    showToast('이미 스캔된 차량입니다.');
+  } else {
+    /* ── 신규 스캔: 목록 최상단 추가 ── */
+    scannedCount++;
+    scannedList.unshift({ ...vehicle, isDup: false });
+    renderList('new', vehicle.vin);
+    updateStats();
+    showToast('스캔 완료 · ' + vehicle.plate);
+  }
+
+  showResults();
+}
+
+/* ============================================================
+   RENDER LIST
+   - scannedList 순서 그대로 렌더 (index 0 = 최신)
+   - animType: 'new' | 'dup' | null
+   ============================================================ */
+function renderList(animType, targetVin) {
+  const container = document.getElementById('vehicleList');
+  container.innerHTML = '';
+
+  scannedList.forEach(v => {
+    const card = document.createElement('div');
+    let cls = 'v-card';
+    if (targetVin === v.vin) {
+      cls += animType === 'new' ? ' new' : ' dup';
+    }
+    card.className = cls;
+    card.setAttribute('data-vin', v.vin);
+    card.innerHTML = `
+      <div class="badge-col">
+        <span class="badge b-ok">스캔</span>
+      </div>
+      <div class="v-info">
+        <div class="v-vin">${v.vin}</div>
+        <div class="v-plate">${v.plate}</div>
+        <div class="v-model">${v.model}&nbsp;&nbsp;${v.extColor}(외장)</div>
+        <div class="v-int">${v.intColor}(내장)</div>
+        <span class="v-loc">${v.loc}</span>
+      </div>`;
+    container.appendChild(card);
+  });
+
+  /* 카운트 레이블 */
+  document.getElementById('listCntLabel').textContent = scannedList.length + '건';
+
+  /* 최상단 스크롤 */
+  document.getElementById('listWrap').scrollTop = 0;
+}
+
+/* ============================================================
+   SHOW RESULTS / UPDATE STATS
+   ============================================================ */
+function showResults() {
+  if (!hasResult) {
+    hasResult = true;
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('scanStats').classList.add('visible');
+    document.getElementById('listWrap').classList.add('visible');
+  }
+}
+
+function updateStats() {
+  document.getElementById('scanCnt').textContent = scannedCount.toLocaleString();
+  document.getElementById('progFill').style.width = Math.min(scannedCount / TARGET * 100, 100) + '%';
+}
+
+/* ============================================================
+   SEARCH (차량번호 4자리)
    ============================================================ */
 function onSearchInput() {
-  const v = document.getElementById('searchInput').value.replace(/\D/g,'');
+  const v = document.getElementById('searchInput').value.replace(/\D/g, '');
   document.getElementById('searchInput').value = v;
   document.getElementById('btnSearch').disabled = v.length < 4;
 }
-function onSearchKeydown(e) {
+function onSearchKey(e) {
   if (e.key === 'Enter') { document.getElementById('searchInput').blur(); doSearch(); }
 }
 function doSearch() {
@@ -618,7 +721,7 @@ function doSearch() {
     showDialog('차량번호 4자리를 입력해 주세요.', [{ label:'확인', cls:'primary', fn: closeDialog }]);
     return;
   }
-  const matched = vehicleData.filter(v => v.plate.includes(val));
+  const matched = plateList.filter(v => v.plate.includes(val));
   if (!matched.length) {
     showDialog('검색 결과가 없습니다.', [{ label:'확인', cls:'primary', fn: closeDialog }]);
     return;
@@ -627,266 +730,39 @@ function doSearch() {
     `총 ${matched.length}건이 검색되었습니다.\n스캔 처리하시겠습니까?`,
     [
       { label:'취소',    cls:'',        fn: closeDialog },
-      { label:'스캔처리', cls:'primary', fn: () => { closeDialog(); processScan(matched[0].vin); } }
+      { label:'스캔처리', cls:'primary', fn: () => {
+          closeDialog();
+          /* 검색 스캔은 QR 키값 그대로 생성해 processScan 재사용 */
+          processScan('QR-' + matched[0].vin);
+        }
+      }
     ]
   );
 }
 
 /* ============================================================
-   CAMERA / QR SCAN
-   ✅ 핵심 수정: catch 블록에서 자동 시뮬 절대 실행 안 함
-   ============================================================ */
-const qrViewport    = document.getElementById('qrViewport');
-const qrVideo       = document.getElementById('qrVideo');
-const scanLine      = document.getElementById('scanLine');
-const placeholder   = document.getElementById('qrPlaceholder');
-const qrError       = document.getElementById('qrError');
-const scanStatusTxt = document.getElementById('scanStatusText');
-const simBtnWrap    = document.getElementById('simBtnWrap');
-
-qrViewport.addEventListener('click', toggleScan);
-
-async function toggleScan() {
-  if (scanningActive) {
-    stopCamera();
-  } else {
-    await startCamera();
-  }
-}
-
-async function startCamera() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
-    });
-
-    // ✅ 카메라 성공 → 실제 스트림 연결
-    videoStream = stream;
-    qrVideo.srcObject = stream;
-    qrVideo.classList.add('active');
-
-    placeholder.style.display = 'none';
-    qrError.classList.remove('show');
-    scanLine.classList.add('active');
-    scanStatusTxt.classList.add('active');
-    scanningActive = true;
-    cameraAvailable = true;
-
-    // ✅ 실제 카메라 연결 후에만 시뮬 1회 예약
-    //    (실제 서비스에서는 jsQR 등 QR 디코딩 라이브러리로 대체)
-    simTimer = setTimeout(simulateScan, 2000 + Math.random() * 2000);
-
-  } catch (err) {
-    // ✅ 카메라 실패 → 자동 시뮬 절대 실행 안 함
-    //    안내 메시지 + 시뮬 버튼만 노출
-    console.warn('[QR] 카메라 접근 실패:', err.name, err.message);
-
-    scanningActive = false;   // ← 반드시 false 유지
-    cameraAvailable = false;
-
-    placeholder.style.display = 'none';
-    qrError.classList.add('show');          // 에러 안내 표시
-    simBtnWrap.classList.add('show');       // 시뮬 버튼 표시
-  }
-}
-
-function stopCamera() {
-  // 스트림 정지
-  if (videoStream) {
-    videoStream.getTracks().forEach(t => t.stop());
-    videoStream = null;
-  }
-  qrVideo.srcObject = null;
-  qrVideo.classList.remove('active');
-
-  // 타이머 정지
-  if (simTimer) { clearTimeout(simTimer); simTimer = null; }
-
-  // UI 복구
-  scanLine.classList.remove('active');
-  scanStatusTxt.classList.remove('active');
-  placeholder.style.display = 'flex';
-  placeholder.innerHTML = `
-    <div class="qr-symbol-inner">
-      <span></span><span></span><span></span>
-      <span></span><span class="empty"></span><span></span>
-      <span></span><span></span><span></span>
-    </div>
-    <p>터치하여 QR 스캔 시작</p>`;
-  qrError.classList.remove('show');
-  scanningActive = false;
-}
-
-/* ============================================================
-   시뮬레이션 스캔
-   ✅ 핵심 수정: 스캔 1회 후 자동 반복 없음 → 카메라 대기 상태 유지
-   ============================================================ */
-function simulateScan() {
-  if (!scanningActive) return;
-
-  // 미스캔 차량 우선, 12% 확률로 중복 스캔
-  const unscanned = vehicleData.filter(v => !v.scanned);
-  let target;
-
-  if (unscanned.length === 0) {
-    target = vehicleData[Math.floor(Math.random() * vehicleData.length)];
-  } else if (Math.random() < 0.12 && vehicleData.some(v => v.scanned)) {
-    const done = vehicleData.filter(v => v.scanned);
-    target = done[Math.floor(Math.random() * done.length)];
-  } else {
-    target = unscanned[Math.floor(Math.random() * unscanned.length)];
-  }
-
-  // ✅ 스캔 처리 (카메라 유지, 자동 반복 없음)
-  processScan(target.vin);
-
-  // ✅ scheduleNextScan() 제거 → 연속 자동 스캔 없음
-  //    카메라는 켜진 상태 유지, 다음 QR 인식 대기
-}
-
-/* ============================================================
-   시뮬 버튼 (카메라 없는 환경: 클릭 1회 = 스캔 1회)
-   ============================================================ */
-function doSimScan() {
-  const unscanned = vehicleData.filter(v => !v.scanned);
-  let target;
-
-  if (unscanned.length === 0) {
-    // 전부 스캔 완료 → 중복 스캔 시뮬
-    target = vehicleData[Math.floor(Math.random() * vehicleData.length)];
-  } else {
-    target = unscanned[Math.floor(Math.random() * unscanned.length)];
-  }
-
-  // 스캔 라인 짧게 표시 (시각적 피드백)
-  scanLine.classList.add('active');
-  setTimeout(() => {
-    if (!scanningActive) scanLine.classList.remove('active');
-  }, 800);
-
-  processScan(target.vin);
-}
-
-/* ============================================================
-   SCAN PROCESSING
-   ============================================================ */
-function processScan(vin) {
-  const vehicle = vehicleData.find(v => v.vin === vin);
-  if (!vehicle) return;
-
-  if (vehicle.scanned) {
-    // ✅ 중복 스캔: 최상단 이동 + 경고 토스트
-    vehicleData = [vehicle, ...vehicleData.filter(v => v.vin !== vin)];
-    renderList(null);
-    scrollToTop();
-    highlightCard(vin);
-    showToast('이미 스캔된 차량입니다.');
-  } else {
-    // ✅ 신규 스캔: 즉시 리스트 상단에 카드 추가
-    vehicle.scanned = true;
-    scannedCount++;
-    vehicleData = [vehicle, ...vehicleData.filter(v => v.vin !== vin)];
-    renderList(vin);   // ← new-scan 애니메이션 적용
-    scrollToTop();
-    updateStats();
-    showToast('스캔 완료 · ' + vehicle.plate);
-  }
-
-  showResults();
-}
-
-function scrollToTop() {
-  document.getElementById('vehicleListWrap').scrollTop = 0;
-}
-
-/* ============================================================
-   RENDER LIST
-   ============================================================ */
-function renderList(newVin) {
-  const list = document.getElementById('vehicleList');
-  const sorted = [
-    ...vehicleData.filter(v => v.scanned),   // 스캔 완료 → 상단
-    ...vehicleData.filter(v => !v.scanned),  // 미스캔 → 하단
-  ];
-
-  list.innerHTML = '';
-  sorted.forEach(v => {
-    const card = document.createElement('div');
-    card.className = 'vehicle-card' + (v.vin === newVin ? ' new-scan' : '');
-    card.setAttribute('data-vin', v.vin);
-    card.innerHTML = `
-      <div class="badge-col">
-        <span class="badge ${v.scanned ? 'badge-scanned' : 'badge-unscanned'}">
-          ${v.scanned ? '스캔' : '···'}
-        </span>
-      </div>
-      <div class="vehicle-info">
-        <div class="vin">${v.vin}</div>
-        <div class="plate">${v.plate}</div>
-        <div class="model-color">${v.model} &nbsp;${v.extColor}(외장)</div>
-        <div class="interior">${v.intColor}(내장)</div>
-        <span class="loc-badge">${v.loc}</span>
-      </div>`;
-    list.appendChild(card);
-  });
-
-  // 목록 카운트 갱신
-  const total   = vehicleData.length;
-  const scanned = vehicleData.filter(v => v.scanned).length;
-  document.getElementById('listCountLabel').textContent = `${scanned} / ${total}건`;
-}
-
-function highlightCard(vin) {
-  requestAnimationFrame(() => {
-    const card = document.querySelector(`[data-vin="${vin}"]`);
-    if (card) {
-      card.classList.add('highlight');
-      setTimeout(() => card.classList.remove('highlight'), 800);
-    }
-  });
-}
-
-/* ============================================================
-   SHOW RESULTS / UPDATE STATS
-   ============================================================ */
-function showResults() {
-  if (!hasScanned) {
-    hasScanned = true;
-    document.getElementById('emptyState').style.display    = 'none';
-    document.getElementById('scanStats').classList.add('visible');
-    document.getElementById('vehicleListWrap').classList.add('visible');
-  }
-}
-
-function updateStats() {
-  document.getElementById('scanCount').textContent = scannedCount.toLocaleString();
-  const pct = Math.min((scannedCount / TARGET) * 100, 100);
-  document.getElementById('progressFill').style.width = pct + '%';
-}
-
-/* ============================================================
-   SELECT CHANGE
+   SELECT CHANGE → 전체 초기화
    ============================================================ */
 function onSelectChange() {
   stopCamera();
-  simBtnWrap.classList.remove('show');
-  vehicleData  = JSON.parse(JSON.stringify(initialVehicles));
+  scannedList  = [];
   scannedCount = 0;
-  hasScanned   = false;
+  hasResult    = false;
   updateStats();
-  document.getElementById('emptyState').style.display    = 'flex';
+  document.getElementById('emptyState').style.display = 'flex';
   document.getElementById('scanStats').classList.remove('visible');
-  document.getElementById('vehicleListWrap').classList.remove('visible');
+  document.getElementById('listWrap').classList.remove('visible');
+  document.getElementById('vehicleList').innerHTML = '';
+  document.getElementById('listCntLabel').textContent = '';
   document.getElementById('searchInput').value = '';
   document.getElementById('btnSearch').disabled = true;
-  document.getElementById('vehicleList').innerHTML = '';
 }
 
 /* ============================================================
    COMPLETE
    ============================================================ */
 function showCompleteConfirm() {
-  if (!hasScanned) {
+  if (!hasResult || scannedCount === 0) {
     showDialog('스캔된 차량이 없습니다.\nQR스캔 후 진행해 주세요.', [
       { label:'확인', cls:'primary', fn: closeDialog }
     ]);
@@ -904,7 +780,7 @@ function doComplete() {
   closeDialog();
   stopCamera();
   showToast('재고실사 처리가 완료되었습니다.');
-  setTimeout(() => onSelectChange(), 2400);
+  setTimeout(onSelectChange, 2400);
 }
 
 /* ============================================================
@@ -921,21 +797,19 @@ function goBack() {
    DIALOG
    ============================================================ */
 function showDialog(msg, buttons) {
-  document.getElementById('dialogMsg').innerHTML = msg.replace(/\n/g,'<br>');
-  const acts = document.getElementById('dialogActions');
-  acts.innerHTML = '';
+  document.getElementById('dlgMsg').innerHTML = msg.replace(/\n/g, '<br>');
+  const wrap = document.getElementById('dlgActions');
+  wrap.innerHTML = '';
   buttons.forEach(b => {
     const btn = document.createElement('button');
     btn.textContent = b.label;
     if (b.cls === 'primary') btn.classList.add('primary');
     btn.addEventListener('click', b.fn);
-    acts.appendChild(btn);
+    wrap.appendChild(btn);
   });
-  document.getElementById('dialogOverlay').classList.add('show');
+  document.getElementById('dlgOverlay').classList.add('show');
 }
-function closeDialog() {
-  document.getElementById('dialogOverlay').classList.remove('show');
-}
+function closeDialog() { document.getElementById('dlgOverlay').classList.remove('show'); }
 
 /* ============================================================
    TOAST
