@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>GD_MO_0900 재고실사</title>
+<style>
+  /* ===== RESET & BASE ===== */
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { width: 100%; height: 100%; background: #888; font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; }
+
+  /* ===== GALAXY S25 SHELL ===== */
+  .device-shell {
+    width: 412px;
+    min-height: 915px;
+    margin: 20px auto;
+    background: #111;
+    border-radius: 48px;
+    padding: 14px 10px;
+    box-shadow: 0 0 0 2px #444, 0 0 0 5px #222, 0 8px 40px rgba(0,0,0,0.7);
+    position: relative;
+  }
+  .device-shell::before {
+    content: '';
+    position: absolute;
+    top: 14px; left: 50%; transform: translateX(-50%);
+    width: 100px; height: 10px;
+    background: #222;
+    border-radius: 0 0 8px 8px;
+    z-index: 10;
+  }
+
+  /* ===== SCREEN ===== */
+  .screen {
+    width: 100%;
+    min-height: 887px;
+    background: #fff;
+    border-radius: 38px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  /* ===== STATUS BAR ===== */
+  .status-bar {
+    background: #111;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px 6px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
+  }
+  .status-bar .time { font-size: 13px; font-weight: 700; }
+  .status-bar .icons { display: flex; gap: 5px; align-items: center; font-size: 11px; }
+
+  /* ===== HEADER ===== */
+  .header {
+    background: #111;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    height: 52px;
+    flex-shrink: 0;
+    border-bottom: 1px solid #333;
+  }
+  .header .btn-back {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 22px;
+    cursor: pointer;
+    padding: 8px 12px 8px 0;
+    line-height: 1;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  .header .title {
+    flex: 1;
+    text-align: center;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    margin-right: 44px;
+  }
+
+  /* ===== BODY ===== */
+  .body {
+    flex: 1;
+    overflow-y: auto;
+    background: #f5f5f5;
+    display: flex;
+    flex-direction: column;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ===== SELECT AREA ===== */
+  .select-area {
+    background: #fff;
+    padding: 14px 16px;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .select-area label {
+    font-size: 14px;
+    font-weight: 700;
+    color: #111;
+    white-space: nowrap;
+  }
+  .select-area select {
+    flex: 1;
+    height: 44px;
+    border: 2px solid #111;
+    border-radius: 0;
+    background: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    color: #111;
+    padding: 0 10px;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'%3E%3Cpath fill='%23111' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    cursor: pointer;
+  }
+  .select-area select:disabled {
+    background-color: #f0f0f0;
+    color: #888;
+    border-color: #ddd;
+    cursor: default;
+  }
+
+  /* ===== QR SCAN AREA ===== */
+  .qr-area {
+    background: #fff;
+    padding: 16px;
+    border-bottom: 1px solid #ddd;
+    flex-shrink: 0;
+  }
+  .qr-viewport {
+    width: 100%;
+    height: 190px;
+    border: 2px solid #111;
+    background: #111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .qr-viewport video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+  }
+  .qr-viewport video.active { display: block; }
+  .qr-crosshair {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    pointer-events: none;
+  }
+  .qr-crosshair::before,
+  .qr-crosshair::after {
+    content: '';
+    position: absolute;
+    background: #fff;
+  }
+  .qr-crosshair::before {
+    width: 2px; height: 60px;
+    left: 50%; transform: translateX(-50%);
+  }
+  .qr-crosshair::after {
+    width: 60px; height: 2px;
+    top: 50%; transform: translateY(-50%);
+  }
+  .qr-scan-line {
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background: rgba(255,255,255,0.7);
+    top: 0;
+    animation: scanMove 2s linear infinite;
+    display: none;
+  }
+  .qr-scan-line.active { display: block; }
+  @keyframes scanMove {
+    0% { top: 0; }
+    100% { top: 100%; }
+  }
+  .qr-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: #888;
+  }
+  .qr-placeholder .qr-icon {
+    width: 56px; height: 56px;
+    border: 3px solid #555;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    padding: 6px;
+  }
+  .qr-placeholder .qr-icon span {
+    background: #555;
+    display: block;
+  }
+  .qr-placeholder .qr-icon span:nth-child(4) { background: none; }
+  .qr-placeholder p { font-size: 12px; color: #888; }
+
+  /* Corner brackets */
+  .qr-corners {
+    position: absolute;
+    inset: 10px;
+    pointer-events: none;
+  }
+  .qr-corners::before,
+  .qr-corners::after,
+  .qr-corners span::before,
+  .qr-corners span::after {
+    content: '';
+    position: absolute;
+    width: 18px; height: 18px;
+    border-color: #fff;
+    border-style: solid;
+  }
+  .qr-corners::before { top: 0; left: 0; border-width: 3px 0 0 3px; }
+  .qr-corners::after { top: 0; right: 0; border-width: 3px 3px 0 0; }
+  .qr-corners span::before { bottom: 0; left: 0; border-width: 0 0 3px 3px; }
+  .qr-corners span::after { bottom: 0; right: 0; border-width: 0 3px 3px 0; }
+
+  /* ===== SEARCH AREA ===== */
+  .search-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px 14px;
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+    flex-shrink: 0;
+  }
+  .search-area input[type="tel"] {
+    flex: 1;
+    height: 48px;
+    border: 2px solid #111;
+    border-radius: 0;
+    font-size: 15px;
+    padding: 0 12px;
+    color: #111;
+    background: #fff;
+    outline: none;
+  }
+  .search-area input[type="tel"]::placeholder { color: #bbb; font-size: 13px; }
+  .search-area input[type="tel"]:focus { border-color: #111; background: #f8f8f8; }
+
+  .btn-search {
+    height: 48px;
+    padding: 0 16px;
+    background: #111;
+    color: #fff;
+    border: none;
+    border-radius: 0;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    min-width: 60px;
+  }
+  .btn-search:disabled {
+    background: #888;
+    cursor: default;
+  }
+
+  /* ===== EMPTY STATE ===== */
+  .empty-state {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+  .empty-state p {
+    text-align: center;
+    font-size: 15px;
+    color: #555;
+    line-height: 1.7;
+    word-break: keep-all;
+  }
+
+  /* ===== SCAN STATS ===== */
+  .scan-stats {
+    padding: 12px 16px;
+    background: #fff;
+    border-bottom: 2px solid #111;
+    display: none;
+    flex-shrink: 0;
+  }
+  .scan-stats.visible { display: block; }
+  .scan-stats p {
+    font-size: 15px;
+    font-weight: 700;
+    color: #111;
+  }
+  .scan-stats span.count { font-size: 18px; font-weight: 900; }
+
+  /* ===== VEHICLE LIST ===== */
+  .vehicle-list {
+    flex: 1;
+    padding: 0;
+    display: none;
+    flex-direction: column;
+    gap: 0;
+  }
+  .vehicle-list.visible { display: flex; }
+
+  .vehicle-card {
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+    padding: 14px 16px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    transition: background 0.15s;
+  }
+  .vehicle-card.highlight {
+    animation: flashHighlight 0.6s ease;
+  }
+  @keyframes flashHighlight {
+    0%,100% { background: #fff; }
+    30% { background: #f0f0f0; }
+  }
+
+  .badge-col { flex-shrink: 0; padding-top: 2px; }
+  .badge {
+    display: inline-block;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 800;
+    border-radius: 0;
+    letter-spacing: 0.5px;
+    min-width: 48px;
+    text-align: center;
+    border: 2px solid #111;
+  }
+  .badge-scanned {
+    background: #111;
+    color: #fff;
+    border-color: #111;
+  }
+  .badge-unscanned {
+    background: #fff;
+    color: #888;
+    border: 2px dashed #bbb;
+  }
+
+  .vehicle-info { flex: 1; min-width: 0; }
+  .vin {
+    font-size: 13px;
+    font-weight: 700;
+    color: #111;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
+    margin-bottom: 3px;
+  }
+  .plate {
+    font-size: 14px;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 3px;
+  }
+  .model-color {
+    font-size: 13px;
+    color: #333;
+    margin-bottom: 2px;
+  }
+  .interior {
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 4px;
+  }
+  .loc-badge {
+    display: inline-block;
+    background: #f0f0f0;
+    border: 1px solid #ccc;
+    font-size: 12px;
+    color: #333;
+    padding: 2px 8px;
+    font-weight: 600;
+  }
+
+  /* ===== NO INVENTORY STATE ===== */
+  .no-inventory {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+  .no-inventory p {
+    text-align: center;
+    font-size: 15px;
+    color: #555;
+    line-height: 1.7;
+  }
+
+  /* ===== TOAST ===== */
+  .toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: #fff;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+    white-space: nowrap;
+    z-index: 9999;
+    max-width: 320px;
+    text-align: center;
+    word-break: keep-all;
+    white-space: normal;
+  }
+  .toast.show { opacity: 1; }
+
+  /* ===== DIALOG OVERLAY ===== */
+  .dialog-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .dialog-overlay.show { display: flex; }
+  .dialog-box {
+    background: #fff;
+    width: 300px;
+    border: 2px solid #111;
+  }
+  .dialog-msg {
+    padding: 24px 20px 20px;
+    font-size: 15px;
+    color: #111;
+    text-align: center;
+    line-height: 1.6;
+    font-weight: 500;
+    word-break: keep-all;
+  }
+  .dialog-actions {
+    display: flex;
+    border-top: 1px solid #ddd;
+  }
+  .dialog-actions button {
+    flex: 1;
+    height: 52px;
+    border: none;
+    border-radius: 0;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    background: #fff;
+    color: #111;
+  }
+  .dialog-actions button + button {
+    border-left: 1px solid #ddd;
+  }
+  .dialog-actions button.primary {
+    background: #111;
+    color: #fff;
+  }
+
+  /* ===== FOOTER ===== */
+  .footer {
+    background: #fff;
+    border-top: 2px solid #111;
+    padding: 12px 16px;
+    flex-shrink: 0;
+  }
+  .btn-complete {
+    width: 100%;
+    height: 56px;
+    background: #111;
+    color: #fff;
+    border: none;
+    border-radius: 0;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+  }
+  .btn-complete:active { background: #333; }
+
+  /* ===== NO INVENTORY SCREEN ===== */
+  .screen-no-inv .select-area select { background-color: #f0f0f0; color: #888; border-color: #ccc; }
+
+  /* ===== SCROLLBAR ===== */
+  .body::-webkit-scrollbar { width: 3px; }
+  .body::-webkit-scrollbar-track { background: #f0f0f0; }
+  .body::-webkit-scrollbar-thumb { background: #bbb; }
+</style>
+</head>
+<body>
+
+<!-- ===== GALAXY S25 DEVICE SHELL ===== -->
+<div class="device-shell">
+  <div class="screen" id="mainScreen">
+
+    <!-- STATUS BAR -->
+    <div class="status-bar">
+      <span class="time" id="statusTime">09:41</span>
+      <div class="icons">
+        <span>●●●</span>
+        <span>WiFi</span>
+        <span>100%</span>
+      </div>
+    </div>
+
+    <!-- HEADER -->
+    <div class="header">
+      <button class="btn-back" onclick="goBack()">&#8249;</button>
+      <div class="title">재고실사</div>
+    </div>
+
+    <!-- BODY -->
+    <div class="body" id="bodyArea">
+
+      <!-- 실사번호 선택 -->
+      <div class="select-area">
+        <label>실사번호:</label>
+        <select id="invSelect" onchange="onSelectChange()">
+          <option value="INV-2026-05-001">INV-2026-05-001</option>
+          <option value="INV-2026-04-001">INV-2026-04-001</option>
+          <option value="INV-2026-03-001">INV-2026-03-001</option>
+        </select>
+      </div>
+
+      <!-- QR 스캔 영역 -->
+      <div class="qr-area">
+        <div class="qr-viewport" id="qrViewport">
+          <video id="qrVideo" playsinline autoplay muted></video>
+          <div class="qr-scan-line" id="scanLine"></div>
+          <div class="qr-corners"><span></span></div>
+          <div class="qr-crosshair" id="qrCrosshair"></div>
+          <div class="qr-placeholder" id="qrPlaceholder">
+            <div class="qr-icon">
+              <span></span><span></span>
+              <span></span><span></span>
+            </div>
+            <p>터치하여 QR 스캔 시작</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 검색 영역 -->
+      <div class="search-area">
+        <input type="tel"
+          id="searchInput"
+          maxlength="4"
+          placeholder="차량번호 4자리"
+          inputmode="numeric"
+          oninput="onSearchInput()"
+          onkeydown="onSearchKeydown(event)">
+        <button class="btn-search" id="btnSearch" onclick="doSearch()" disabled>검색</button>
+      </div>
+
+      <!-- 스캔 통계 (스캔 후 표시) -->
+      <div class="scan-stats" id="scanStats">
+        <p>스캔: <span class="count" id="scanCount">0</span>건 &nbsp;/&nbsp; 목표: <span class="count">1,000</span>건</p>
+      </div>
+
+      <!-- 빈 상태 (초기) -->
+      <div class="empty-state" id="emptyState">
+        <p>차량 QR스캔 또는 차량번호 검색을<br>진행해 주세요.</p>
+      </div>
+
+      <!-- 차량 목록 -->
+      <div class="vehicle-list" id="vehicleList"></div>
+
+    </div><!-- /body -->
+
+    <!-- FOOTER -->
+    <div class="footer">
+      <button class="btn-complete" onclick="showCompleteConfirm()">재고실사 처리</button>
+    </div>
+
+  </div><!-- /screen -->
+</div><!-- /device-shell -->
+
+<!-- ===== DIALOG ===== -->
+<div class="dialog-overlay" id="dialogOverlay">
+  <div class="dialog-box">
+    <div class="dialog-msg" id="dialogMsg">메시지</div>
+    <div class="dialog-actions" id="dialogActions"></div>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ====================================================
+   DATA & STATE
+   ==================================================== */
+let scannedCount = 0;
+const TARGET_COUNT = 1000;
+let scanningActive = false;
+let videoStream = null;
+let scanInterval = null;
+
+// 초기 차량 데이터 (미스캔 상태)
+const initialVehicles = [
+  { vin:'KMHEC4A46GU123456', plate:'경기01소2247', model:'소나타', extColor:'메탈실버', intColor:'베이지', loc:'CC01 판매탁송대기', scanned:false },
+  { vin:'KMHEC4A46GU234567', plate:'서울12가2246', model:'아반떼', extColor:'퍼얼화이트', intColor:'블랙', loc:'CC01 판매탁송대기', scanned:false },
+  { vin:'KMHEC4A46GU345678', plate:'인천17가2245', model:'K5', extColor:'메탈블랙', intColor:'그레이', loc:'P101 치장대기', scanned:false },
+  { vin:'KMHEC4A46GU456789', plate:'대전22나2244', model:'쏘나타', extColor:'화이트', intColor:'베이지', loc:'P101 치장대기', scanned:false },
+  { vin:'KMHEC4A46GU567890', plate:'부산14다2243', model:'그랜저', extColor:'문라이트블루', intColor:'블랙', loc:'A201 입고대기', scanned:false },
+  { vin:'KMHEC4A46GU678901', plate:'대구25라2242', model:'투싼', extColor:'크리스탈실버', intColor:'베이지', loc:'B102 재고중', scanned:false },
+];
+
+let vehicleData = JSON.parse(JSON.stringify(initialVehicles));
+let hasScanned = false;
+
+/* ====================================================
+   STATUS BAR CLOCK
+   ==================================================== */
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('statusTime').textContent = `${h}:${m}`;
+}
+updateClock();
+setInterval(updateClock, 10000);
+
+/* ====================================================
+   SEARCH INPUT
+   ==================================================== */
+function onSearchInput() {
+  const val = document.getElementById('searchInput').value.replace(/[^0-9]/g,'');
+  document.getElementById('searchInput').value = val;
+  document.getElementById('btnSearch').disabled = val.length < 4;
+}
+function onSearchKeydown(e) {
+  if (e.key === 'Enter') {
+    document.getElementById('searchInput').blur();
+    doSearch();
+  }
+}
+function doSearch() {
+  const val = document.getElementById('searchInput').value;
+  if (!val || val.length < 4) {
+    showDialog('차량번호 4자리를 입력해 주세요.', [{ label:'확인', type:'primary', fn: closeDialog }]);
+    return;
+  }
+  const matched = vehicleData.filter(v => v.plate.includes(val));
+  if (matched.length === 0) {
+    showDialog('검색 결과가 없습니다.', [{ label:'확인', type:'primary', fn: closeDialog }]);
+    return;
+  }
+  showDialog(
+    `총 ${matched.length}건이 검색되었습니다.\n차량을 스캔 처리하시겠습니까?`,
+    [
+      { label:'취소', type:'', fn: closeDialog },
+      { label:'스캔처리', type:'primary', fn: ()=>{ closeDialog(); processManualScan(matched[0]); } }
+    ]
+  );
+}
+
+/* ====================================================
+   QR SCAN (카메라 연동)
+   ==================================================== */
+const qrViewport = document.getElementById('qrViewport');
+const qrVideo    = document.getElementById('qrVideo');
+const scanLine   = document.getElementById('scanLine');
+const qrCrosshair= document.getElementById('qrCrosshair');
+const placeholder= document.getElementById('qrPlaceholder');
+
+qrViewport.addEventListener('click', toggleScan);
+
+async function toggleScan() {
+  if (!scanningActive) {
+    await startCamera();
+  } else {
+    stopCamera();
+  }
+}
+
+async function startCamera() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+    });
+    videoStream = stream;
+    qrVideo.srcObject = stream;
+    qrVideo.classList.add('active');
+    scanLine.classList.add('active');
+    placeholder.style.display = 'none';
+    qrCrosshair.style.display = 'none';
+    scanningActive = true;
+
+    // 시뮬레이션: 2~4초 후 랜덤 차량 스캔
+    const delay = 2000 + Math.random() * 2000;
+    scanInterval = setTimeout(simulateScan, delay);
+
+  } catch(err) {
+    // 카메라 권한 없는 환경 (PC 미리보기 등) → 시뮬레이션 모드
+    console.warn('Camera not available, using simulation mode:', err);
+    placeholder.innerHTML = '<p style="color:#bbb; font-size:13px;">📷 스캔 시뮬레이션 중...</p>';
+    scanLine.classList.add('active');
+    scanningActive = true;
+    const delay = 1500 + Math.random() * 1500;
+    scanInterval = setTimeout(simulateScan, delay);
+  }
+}
+
+function stopCamera() {
+  if (videoStream) {
+    videoStream.getTracks().forEach(t => t.stop());
+    videoStream = null;
+  }
+  qrVideo.srcObject = null;
+  qrVideo.classList.remove('active');
+  scanLine.classList.remove('active');
+  placeholder.style.display = 'flex';
+  placeholder.innerHTML = `
+    <div class="qr-icon">
+      <span></span><span></span>
+      <span></span><span></span>
+    </div>
+    <p>터치하여 QR 스캔 시작</p>`;
+  qrCrosshair.style.display = '';
+  scanningActive = false;
+  if (scanInterval) { clearTimeout(scanInterval); scanInterval = null; }
+}
+
+function simulateScan() {
+  // 미스캔 차량 우선, 없으면 이미 스캔된 차량 (중복 테스트)
+  const unscanned = vehicleData.filter(v => !v.scanned);
+  let target;
+  if (unscanned.length === 0) {
+    // 전부 스캔됨 → 랜덤 중복 스캔
+    target = vehicleData[Math.floor(Math.random() * vehicleData.length)];
+  } else if (Math.random() < 0.15 && vehicleData.some(v => v.scanned)) {
+    // 15% 확률로 중복 스캔
+    const scanned = vehicleData.filter(v => v.scanned);
+    target = scanned[Math.floor(Math.random() * scanned.length)];
+  } else {
+    target = unscanned[Math.floor(Math.random() * unscanned.length)];
+  }
+
+  stopCamera();
+  processScan(target.vin);
+}
+
+/* ====================================================
+   SCAN PROCESSING
+   ==================================================== */
+function processScan(vin) {
+  const vehicle = vehicleData.find(v => v.vin === vin);
+  if (!vehicle) return;
+
+  const isDuplicate = vehicle.scanned;
+
+  if (isDuplicate) {
+    // 중복 스캔 → 최상단 이동 + 경고
+    vehicleData = [vehicle, ...vehicleData.filter(v => v.vin !== vin)];
+    renderList();
+    highlightCard(vin);
+    showToast('이미 스캔된 차량입니다.\n목록 최상단으로 이동했습니다.');
+  } else {
+    // 신규 스캔
+    vehicle.scanned = true;
+    scannedCount++;
+    vehicleData = [vehicle, ...vehicleData.filter(v => v.vin !== vin)];
+    renderList();
+    highlightCard(vin);
+    updateStats();
+    showToast('스캔 완료: ' + vehicle.plate);
+  }
+
+  // 결과 표시
+  showResults();
+}
+
+function processManualScan(vehicle) {
+  processScan(vehicle.vin);
+}
+
+function highlightCard(vin) {
+  setTimeout(() => {
+    const card = document.querySelector(`[data-vin="${vin}"]`);
+    if (card) {
+      card.classList.add('highlight');
+      setTimeout(() => card.classList.remove('highlight'), 700);
+    }
+  }, 50);
+}
+
+/* ====================================================
+   RENDER
+   ==================================================== */
+function renderList() {
+  const list = document.getElementById('vehicleList');
+  list.innerHTML = '';
+
+  // 스캔 완료 → 상단, 미스캔 → 하단
+  const sorted = [
+    ...vehicleData.filter(v => v.scanned),
+    ...vehicleData.filter(v => !v.scanned)
+  ];
+
+  sorted.forEach(v => {
+    const card = document.createElement('div');
+    card.className = 'vehicle-card';
+    card.setAttribute('data-vin', v.vin);
+    card.innerHTML = `
+      <div class="badge-col">
+        <span class="badge ${v.scanned ? 'badge-scanned' : 'badge-unscanned'}">
+          ${v.scanned ? '스캔' : '_____'}
+        </span>
+      </div>
+      <div class="vehicle-info">
+        <div class="vin">${v.vin}</div>
+        <div class="plate">${v.plate}</div>
+        <div class="model-color">${v.model} ${v.extColor}(외장)</div>
+        <div class="interior">${v.intColor}(내장)</div>
+        <span class="loc-badge">${v.loc}</span>
+      </div>`;
+    list.appendChild(card);
+  });
+}
+
+function showResults() {
+  hasScanned = true;
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('scanStats').classList.add('visible');
+  document.getElementById('vehicleList').classList.add('visible');
+}
+
+function updateStats() {
+  document.getElementById('scanCount').textContent = scannedCount.toLocaleString();
+}
+
+/* ====================================================
+   SELECT CHANGE
+   ==================================================== */
+function onSelectChange() {
+  // 실사번호 변경 시 목록 초기화 (실제 구현에서는 API 재로드)
+  vehicleData = JSON.parse(JSON.stringify(initialVehicles));
+  scannedCount = 0;
+  hasScanned = false;
+  updateStats();
+  document.getElementById('emptyState').style.display = 'flex';
+  document.getElementById('scanStats').classList.remove('visible');
+  document.getElementById('vehicleList').classList.remove('visible');
+  document.getElementById('searchInput').value = '';
+  document.getElementById('btnSearch').disabled = true;
+}
+
+/* ====================================================
+   COMPLETE CONFIRM
+   ==================================================== */
+function showCompleteConfirm() {
+  if (!hasScanned) {
+    showDialog('스캔된 차량이 없습니다.\nQR스캔 후 재고실사 처리를 해주세요.', [
+      { label:'확인', type:'primary', fn: closeDialog }
+    ]);
+    return;
+  }
+  showDialog(
+    `스캔 ${scannedCount}건을 재고실사 처리하시겠습니까?\n\n처리 후 수정이 불가합니다.`,
+    [
+      { label:'취소', type:'', fn: closeDialog },
+      { label:'확인', type:'primary', fn: doComplete }
+    ]
+  );
+}
+
+function doComplete() {
+  closeDialog();
+  showToast('재고실사 처리가 완료되었습니다.');
+  setTimeout(() => {
+    vehicleData = JSON.parse(JSON.stringify(initialVehicles));
+    scannedCount = 0;
+    hasScanned = false;
+    updateStats();
+    document.getElementById('emptyState').style.display = 'flex';
+    document.getElementById('scanStats').classList.remove('visible');
+    document.getElementById('vehicleList').classList.remove('visible');
+    document.getElementById('searchInput').value = '';
+    document.getElementById('btnSearch').disabled = true;
+  }, 2000);
+}
+
+/* ====================================================
+   BACK
+   ==================================================== */
+function goBack() {
+  showDialog('재고실사 화면을 나가시겠습니까?', [
+    { label:'취소', type:'', fn: closeDialog },
+    { label:'나가기', type:'primary', fn: ()=>{ closeDialog(); showToast('LNB 메뉴로 이동합니다.'); } }
+  ]);
+}
+
+/* ====================================================
+   DIALOG
+   ==================================================== */
+function showDialog(msg, buttons) {
+  document.getElementById('dialogMsg').innerHTML = msg.replace(/\n/g,'<br>');
+  const actions = document.getElementById('dialogActions');
+  actions.innerHTML = '';
+  buttons.forEach(b => {
+    const btn = document.createElement('button');
+    btn.textContent = b.label;
+    if (b.type === 'primary') btn.classList.add('primary');
+    btn.addEventListener('click', b.fn);
+    actions.appendChild(btn);
+  });
+  document.getElementById('dialogOverlay').classList.add('show');
+}
+function closeDialog() {
+  document.getElementById('dialogOverlay').classList.remove('show');
+}
+
+/* ====================================================
+   TOAST
+   ==================================================== */
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+/* ====================================================
+   INIT
+   ==================================================== */
+// 초기 목록 렌더 (미스캔 상태로 시작) - 필요 시 주석 해제
+// renderList(); showResults();
+</script>
+</body>
+</html>
