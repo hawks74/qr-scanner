@@ -63,14 +63,8 @@ body {
   display: flex; align-items: center; gap: 10px;
   flex-shrink: 0;
 }
-.inv-label {
-  font-size: 13px; font-weight: 700; color: #555;
-  white-space: nowrap;
-}
-.inv-value {
-  font-size: 15px; font-weight: 800; color: #111;
-  letter-spacing: .3px;
-}
+.inv-label { font-size: 13px; font-weight: 700; color: #555; white-space: nowrap; }
+.inv-value { font-size: 15px; font-weight: 800; color: #111; letter-spacing: .3px; }
 
 /* ===== QR SCAN AREA ===== */
 .qr-area {
@@ -80,10 +74,8 @@ body {
   flex-shrink: 0;
 }
 .qr-viewport {
-  width: 100%;
-  height: 140px;           /* 기존 210px의 2/3 */
-  background: #111;
-  border: 2px solid #111;
+  width: 100%; height: 140px;
+  background: #111; border: 2px solid #111;
   position: relative; overflow: hidden;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
@@ -114,10 +106,10 @@ body {
   width: 18px; height: 18px;
   border-color: #fff; border-style: solid;
 }
-.qr-corners::before         { top:0;    left:0;  border-width: 3px 0 0 3px; }
-.qr-corners::after          { top:0;    right:0; border-width: 3px 3px 0 0; }
-.qr-corners > span::before  { bottom:0; left:0;  border-width: 0 0 3px 3px; }
-.qr-corners > span::after   { bottom:0; right:0; border-width: 0 3px 3px 0; }
+.qr-corners::before        { top:0;    left:0;  border-width: 3px 0 0 3px; }
+.qr-corners::after         { top:0;    right:0; border-width: 3px 3px 0 0; }
+.qr-corners > span::before { bottom:0; left:0;  border-width: 0 0 3px 3px; }
+.qr-corners > span::after  { bottom:0; right:0; border-width: 0 3px 3px 0; }
 
 /* 대기 상태 */
 .state-idle {
@@ -236,8 +228,7 @@ body {
   font-size: 11px; color: #999; font-weight: 500;
   display: flex; gap: 10px; align-items: center;
 }
-.v-meta .v-time { }
-.v-meta .v-seq  { color: #ccc; }
+.v-meta .v-seq { color: #ccc; }
 
 /* ===== FOOTER ===== */
 .footer {
@@ -262,10 +253,7 @@ body {
   align-items: center; justify-content: center;
 }
 .dlg-overlay.on { display: flex; }
-.dlg-box {
-  background: #fff; width: min(88vw, 320px);
-  border: 2px solid #111;
-}
+.dlg-box { background: #fff; width: min(88vw, 320px); border: 2px solid #111; }
 .dlg-msg {
   padding: 28px 20px 22px;
   font-size: 15px; color: #111; text-align: center;
@@ -314,10 +302,8 @@ body {
   <!-- QR 스캔 -->
   <div class="qr-area">
     <div class="qr-viewport" id="qrViewport">
-
       <video id="qrVideo" playsinline autoplay muted></video>
       <canvas id="qrCanvas"></canvas>
-
       <div class="scan-line" id="scanLine"></div>
       <div class="qr-corners"><span></span></div>
 
@@ -339,30 +325,22 @@ body {
 
       <!-- 스캔 중 안내 -->
       <div class="scan-tip" id="scanTip">● 스캔 중 &nbsp;|&nbsp; 터치하면 종료</div>
-
     </div>
   </div>
 
   <!-- 리스트 영역 -->
   <div class="list-wrap">
-
-    <!-- 리스트 헤더 (항상 표시) -->
     <div class="list-hd">
       <span>스캔 결과 목록</span>
       <span class="list-cnt" id="listCnt">0건</span>
     </div>
-
-    <!-- 빈 상태 -->
     <div class="empty-state" id="emptyState">
       <p>QR스캔을 진행해 주세요.</p>
       <small>위 QR 영역을 터치하면 카메라가 실행됩니다</small>
     </div>
-
-    <!-- 스크롤 목록 -->
     <div class="list-scroll" id="listScroll">
       <div id="vehicleList"></div>
     </div>
-
   </div>
 
 </div><!-- /body -->
@@ -385,6 +363,91 @@ body {
 
 <script>
 /* ============================================================
+   WEB AUDIO API — 비프음
+   외부 파일 없이 순수 JS로 비프 생성
+   AudioContext는 사용자 인터랙션(터치) 후 최초 생성
+   ============================================================ */
+let audioCtx = null;
+
+/* AudioContext 초기화 (터치 이벤트 후 최초 1회 실행) */
+function ensureAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  /* suspended 상태면 resume */
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+/*
+  beep(freq, duration, volume)
+  freq     : 주파수 Hz
+  duration : 재생 시간 ms
+  volume   : 0.0 ~ 1.0
+  반환값   : Promise — 비프 종료 후 resolve
+*/
+function beep(freq, duration, volume = 0.4) {
+  return new Promise(resolve => {
+    ensureAudioCtx();
+
+    const osc     = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    osc.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    osc.type      = 'sine';       /* 사인파 : 부드러운 비프음 */
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+    /* 음량 엔벨로프: 클릭음 방지를 위해 5ms fade-in / 30ms fade-out */
+    gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+    gainNode.gain.linearRampToValueAtTime(volume, audioCtx.currentTime + 0.005);
+    gainNode.gain.setValueAtTime(volume, audioCtx.currentTime + (duration / 1000) - 0.03);
+    gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + (duration / 1000));
+
+    osc.start(audioCtx.currentTime);
+    osc.stop(audioCtx.currentTime + duration / 1000);
+
+    osc.onended = () => resolve();
+  });
+}
+
+/*
+  ✅ 스캔 성공음 : 삐삐 — 짧게 2번
+  주파수 1200Hz, 80ms × 2회, 간격 80ms
+*/
+async function beepSuccess() {
+  ensureAudioCtx();
+  await beep(1200, 80, 0.35);
+  await delay(80);
+  await beep(1200, 80, 0.35);
+}
+
+/*
+  ❌ 스캔 실패음 (미등록 QR) : 삐~~~ — 낮은 음 약 2초
+  주파수 440Hz, 1900ms 1회
+*/
+async function beepFail() {
+  ensureAudioCtx();
+  await beep(440, 1900, 0.35);
+}
+
+/*
+  ⚠️ 중복 스캔음 : 삐- 중간 음 1번
+  주파수 800Hz, 150ms
+*/
+async function beepDup() {
+  ensureAudioCtx();
+  await beep(800, 150, 0.3);
+}
+
+/* 유틸 : ms 대기 */
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/* ============================================================
    STATE
    ============================================================ */
 let scannedCount = 0;
@@ -395,13 +458,7 @@ let hasResult    = false;
 let lastQrData   = '';
 let lastQrTime   = 0;
 
-/*
-  scannedList 항목: { id, rawData, scannedAt }
-  - id       : rawData 기준 (중복 판별)
-  - rawData  : jsQR 읽은 QR 원문 그대로
-  - scannedAt: Date 객체
-*/
-let scannedList = [];
+let scannedList  = [];
 
 /* ============================================================
    DOM refs
@@ -415,9 +472,10 @@ const stateIdle  = document.getElementById('stateIdle');
 const stateErr   = document.getElementById('stateErr');
 
 /* ============================================================
-   QR 뷰포트 터치 → 카메라 ON / OFF
+   QR 뷰포트 터치 → AudioContext 활성화 + 카메라 ON/OFF
    ============================================================ */
 qrViewport.addEventListener('click', () => {
+  ensureAudioCtx();   /* 터치 시점에 AudioContext 초기화 */
   isScanning ? stopCamera() : startCamera();
 });
 
@@ -509,23 +567,33 @@ function scanLoop() {
 
 /* ============================================================
    PROCESS SCAN
-   - vehicleDB 없음, QR 원문 그대로 사용
    ============================================================ */
 function processScan(rawData) {
   const now      = new Date();
+
+  /* 빈 데이터 필터 */
+  if (!rawData || rawData.length === 0) {
+    beepFail();   /* ❌ 실패음 */
+    showToast('QR 인식 실패: 빈 데이터입니다.');
+    return;
+  }
+
   const existIdx = scannedList.findIndex(item => item.id === rawData);
 
   if (existIdx !== -1) {
-    /* 중복: 최상단 이동 + 시각 갱신 */
+    /* ⚠️ 중복 스캔 */
     const item = scannedList.splice(existIdx, 1)[0];
     item.scannedAt = now;
     scannedList.unshift(item);
+    beepDup();              /* ⚠️ 중복음 */
     renderList('dup', rawData);
     showToast('이미 스캔된 QR입니다.');
+
   } else {
-    /* 신규: 최상단 추가 */
+    /* ✅ 신규 스캔 성공 */
     scannedCount++;
     scannedList.unshift({ id: rawData, rawData, scannedAt: now });
+    beepSuccess();          /* ✅ 성공음 */
     renderList('new', rawData);
     showToast('스캔 완료');
   }
@@ -547,12 +615,12 @@ function renderList(animType, targetId) {
     card.className = cls;
     card.setAttribute('data-id', item.id);
 
-    const t      = item.scannedAt;
-    const hh     = String(t.getHours()).padStart(2,'0');
-    const mm     = String(t.getMinutes()).padStart(2,'0');
-    const ss     = String(t.getSeconds()).padStart(2,'0');
-    const tStr   = `${hh}:${mm}:${ss}`;
-    const seq    = idx + 1;
+    const t    = item.scannedAt;
+    const hh   = String(t.getHours()).padStart(2,'0');
+    const mm   = String(t.getMinutes()).padStart(2,'0');
+    const ss   = String(t.getSeconds()).padStart(2,'0');
+    const tStr = `${hh}:${mm}:${ss}`;
+    const seq  = idx + 1;
 
     card.innerHTML = `
       <div class="badge-wrap">
@@ -568,10 +636,7 @@ function renderList(animType, targetId) {
     container.appendChild(card);
   });
 
-  /* 카운트 갱신 */
   document.getElementById('listCnt').textContent = scannedList.length + '건';
-
-  /* 최상단 스크롤 */
   document.getElementById('listScroll').scrollTop = 0;
 }
 
@@ -622,8 +687,8 @@ function doComplete() {
     hasResult    = false;
     document.getElementById('emptyState').style.display = 'flex';
     document.getElementById('listScroll').classList.remove('on');
-    document.getElementById('vehicleList').innerHTML     = '';
-    document.getElementById('listCnt').textContent       = '0건';
+    document.getElementById('vehicleList').innerHTML    = '';
+    document.getElementById('listCnt').textContent      = '0건';
   }, 2400);
 }
 
